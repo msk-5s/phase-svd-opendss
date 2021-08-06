@@ -1,12 +1,10 @@
 # SPDX-License-Identifier: MIT
 
 """
-This module contains classes for monitors.
+This module contains functions for making monitors.
 """
 
 from typing import List, NamedTuple, Sequence
-
-from collections import namedtuple
 
 import win32com.client
 
@@ -19,7 +17,7 @@ import pandas as pd
 class Monitor(NamedTuple):
     """
     A tuple of monitor information.
-    
+
     Attributes
     ----------
     dss_command : str
