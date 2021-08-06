@@ -1,6 +1,7 @@
 # **phase-svd-opendss**
 
 This repository contains the source code for generating the dataset used in the [phase-svd](https://github.com/msk-5s/phase-svd) repository. This code will generate a synthetic voltage magnitude dataset using the [Electric Power Research Institute's (EPRI)](https://www.epri.com/) ckt5 test feeder circuit. This dataset is composed of 35040 voltage magnitude measurements from 1379 loads sampled at 15-minute intervals over a year. Each column name in the dataset will contain the name of the load in the ckt5 circuit. Metadata will also be generated for each load containing the following:
+- Name of the load in the ckt5 circuit.
 - Phase that the load is connected to.
 - Name of the ckt5 loadshape used to synthesize the load profile for the load.
 - Name of the secondary distribution transformer that the load is connected to.
