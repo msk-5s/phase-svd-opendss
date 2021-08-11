@@ -229,8 +229,7 @@ def make_metadata(dss: win32com.client.CDispatch):
             "phase": load_phases,
             "loadshape": loadshapes,
             "transformer_name": load_transformer_names
-        },
-        index=load_names
+        }
     )
 
     return metadata_df
