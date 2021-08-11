@@ -56,7 +56,7 @@ def make_default_ckt5_profiles(basepath: str) -> pd.DataFrame:
         "Commercial_MD": None
     }
     
-    with open(f"{basepath}/src/Loadshapes_ckt5.dss", "r", encoding="utf-8") as file:
+    with open(f"{basepath}/ckt5-src/Loadshapes_ckt5.dss", "r", encoding="utf-8") as file:
         for (key, line) in zip(profiles.keys(), file):
             # Get the 'mult' array string.
             array_string = line.split("=")[3]
