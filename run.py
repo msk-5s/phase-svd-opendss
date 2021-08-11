@@ -13,7 +13,6 @@ import pyarrow.feather
 
 import data_factory
 import metadata_factory
-import monitor_channel
 import monitor_factory
 import profile_factory
 
