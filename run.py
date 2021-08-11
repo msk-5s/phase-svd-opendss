@@ -7,6 +7,8 @@ This script generates a synthetic dataset from EPRI's ckt5 test feeder circuit.
 import os
 import win32com.client
 
+from rich.progress import track
+
 import numpy as np
 import pandas as pd
 import pyarrow.feather
@@ -56,7 +58,7 @@ def main(): # pylint: disable=too-many-locals
     )
 
     # Add the monitors to the circuit.
-    for monitor in load_monitors:
+    for monitor in track(load_monitors, "Assigning monitors to loads..."):
         dss.Text.Command = monitor.dss_command
 
     #***********************************************************************************************
@@ -76,7 +78,7 @@ def main(): # pylint: disable=too-many-locals
     ckt5_profiles_df = profile_factory.make_default_ckt5_profiles(basepath=basepath)
 
     # Add the profiles and attach them to each load.
-    for profile in profiles:
+    for profile in track(profiles, "Assigning synthetic profiles to loads..."):
         for dss_command in profile.dss_commands:
             dss.Text.Command = dss_command
 
