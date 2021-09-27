@@ -37,11 +37,11 @@ If you found this repository useful in your own research, then feel free to cite
 ```
 @misc{zaragoza_rao_2021,
     title={Denoising with Singular Value Decomposition for Phase Identification in Power Distribution Systems},
-    url={https://www.techrxiv.org/articles/preprint/Denoising_with_Singular_Value_Decomposition_for_Phase_Identification_in_Power_Distribution_Systems/15102072/1},
-    DOI={10.36227/techrxiv.15102072.v1},
+    url={https://www.techrxiv.org/articles/preprint/Denoising_with_Singular_Value_Decomposition_for_Phase_Identification_in_Power_Distribution_Systems/15102072/2},
+    DOI={10.36227/techrxiv.15102072.v2},
     publisher={TechRxiv},
     author={Zaragoza, Nicholas and Rao, Vittal},
     year={2021},
     month={Aug}
-}
+} 
 ```
