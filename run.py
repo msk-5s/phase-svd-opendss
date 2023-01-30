@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: BSD-3-Clause
 
 """
 This script generates a synthetic dataset from EPRI's ckt5 test feeder circuit.
