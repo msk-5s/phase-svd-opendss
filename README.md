@@ -1,8 +1,20 @@
 # **phase-svd-opendss**
 
-This repository contains the source code for generating the dataset used in the [phase-svd](https://github.com/msk-5s/phase-svd) repository. This code will generate a synthetic voltage magnitude dataset using the [Electric Power Research Institute's (EPRI)](https://www.epri.com/) ckt5 test feeder circuit. This dataset is composed of 35040 voltage magnitude measurements from 1379 loads sampled at 15-minute intervals over a year. Each column name in the dataset will contain the name of the load in the ckt5 circuit. Metadata will also be generated for each load containing the following:
+**Note: Use the `base-phase-svd` branch of this repository if trying to recreate the dataset used in the [phase-svd](https://github.com/msk-5s/phase-svd) repository.**
+
+This repository contains the source code for generating the [phase-svd](https://www.kaggle.com/datasets/msk5sdata/phase-svd) dataset. This code will generate a synthetic dataset using the [Electric Power Research Institute's (EPRI)](https://www.epri.com/) ckt5 test feeder circuit (radial network). This dataset is composed of 35040 measurements from 1379 single-phase loads, 591 secondary distribution transformers, and 1 substation transformer sampled at 15-minute intervals over a year.
+
+The following measurements are generated:
+- Voltage magnitude and angle for each of the 1379 single-phase loads.
+- Current magnitude and angle for each of the 1379 single-phase loads.
+- Voltage magnitude and angle for each of the 591 single-phase secondary distribution transformers (primary and secondary sides).
+- Current magnitude and angle for each of the 591 single-phase secondary distribution transformers (primary and secondary sides).
+- Voltage magnitude and angle for the 1 substation transformer (primary and secondary sides).
+- Current magnitude and angle for the 1 substation transformer (primary and secondary sides).
+
+The labels will also be generated for each load containing the following:
 - Name of the load in the ckt5 circuit.
-- Phase that the load is connected to.
+- Phase that the load is connected to (A = 0, B = 1, C = 2).
 - Name of the ckt5 loadshape used to synthesize the load profile for the load.
 - Name of the secondary distribution transformer that the load is connected to.
 
@@ -10,8 +22,8 @@ The generated dataset will be in the [Apache Arrow Feather](https://arrow.apache
 
 ## Requirements
     - Windows
-    - Python 3.8+ (64-bit)
-    - OpenDSS 9.2.0.1+ (64-bit)
+    - Python 3.9+ (64-bit)
+    - OpenDSS 9.6.1.1+ (64-bit)
     - See requirements.txt file for the required python packages.
     
 ## Running
@@ -26,7 +38,7 @@ import pyarrow.feather
 
 # A pandas dataframe is returned.
 # We are assuming that we are in the repository's root directory.
-data_df = pyarrow.feather.read_feather("data/load_voltage.feather")
+data_df = pyarrow.feather.read_feather("data/load-voltage-magnitude.feather")
 
-data_df.to_csv("data/load_voltage.csv")
+data_df.to_csv("data/load-voltage-magnitude.csv")
 ```
