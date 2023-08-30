@@ -1,6 +1,6 @@
 # **phase-svd-opendss**
 
-**Note: Use the `base-phase-svd` branch of this repository if trying to recreate the dataset used in the [phase-svd](https://github.com/msk-5s/phase-svd) repository.**
+**Note: Use the `base-phase-svd` branch of this repository if trying to recreate the dataset used in the [phase-svd](https://github.com/msk-5s/phase-svd) or [phase-virtual](https://github.com/msk-5s/phase-virtual) repositories.**
 
 This repository contains the source code for generating the [phase-svd](https://www.kaggle.com/datasets/msk5sdata/phase-svd) dataset. This code will generate a synthetic dataset using the [Electric Power Research Institute's (EPRI)](https://www.epri.com/) ckt5 test feeder circuit (radial network). This dataset is composed of 35040 measurements from 1379 single-phase loads, 591 secondary distribution transformers, and 1 substation transformer sampled at 15-minute intervals over a year.
 
