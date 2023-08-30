@@ -7,6 +7,14 @@ respective channel number within the monitor.
 The combinations of channels and their respective indices will change depending on the mode and
 number of phases of the monitored object. The mode enums in this modules are specific to the ctk5
 circuit.
+
+The channel names and indices can be found via the COM interface:
+i_monitor = dss.ActiveCircuit.Monitors
+i_monitor.Name = "what ever your monitor name is"
+channel_names = i_monitor.Header
+
+The enums in this module correspond to the appropriate index within the list returned by
+`i_monitor.Header` for a given phase count and mode.
 """
 
 import enum
