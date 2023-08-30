@@ -14,7 +14,8 @@ import pandas as pd
 import pyarrow.feather
 
 import data_factory
-import metadata_factory
+import label_factory
+import monitor_channel
 import monitor_factory
 import profile_factory
 
@@ -38,15 +39,15 @@ def main(): # pylint: disable=too-many-locals
     dss.Text.Command = f"redirect ({basepath}/ckt5-src/Master_ckt5.dss)"
 
     #***********************************************************************************************
-    # Make the metadata.
+    # Make the labels.
     #***********************************************************************************************
-    # NOTE: It's important to make the metadata before assigning the synthetic load profiles to the
+    # NOTE: It's important to make the labels before assigning the synthetic load profiles to the
     # loads in the circuit. We want to have the names of the original load profiles before changing
     # them so that we will know what each type of load is (Residential, Commercial_SM,
     # Commercial_MD).
-    print("Making metadata...")
+    print("Making labels...")
 
-    metadata_df = metadata_factory.make_metadata(dss=dss)
+    labels_df = label_factory.make_labels(dss=dss)
 
     #***********************************************************************************************
     # Make monitors for the loads.
@@ -60,6 +61,48 @@ def main(): # pylint: disable=too-many-locals
     # Add the monitors to the circuit.
     for monitor in track(load_monitors, "Assigning monitors to loads..."):
         dss.Text.Command = monitor.dss_command
+
+    #***********************************************************************************************
+    # Make monitors for the transformers.
+    #***********************************************************************************************
+    xfmr_sub_name = "MDV_SUB_1".lower()
+    xfmr_sub_object_names = [f"Transformer.{xfmr_sub_name}"]
+
+    xfmr_dist_object_names = [
+        f"Transformer.{name}"
+    for name in dss.ActiveCircuit.Transformers.AllNames if name != xfmr_sub_name]
+
+    xfmr_dist_primary_monitors = monitor_factory.make_monitors(
+        object_names=xfmr_dist_object_names, mode=0, terminal=1
+    )
+
+    xfmr_dist_secondary_monitors = monitor_factory.make_monitors(
+        object_names=xfmr_dist_object_names, mode=0, terminal=2
+    )
+
+    xfmr_sub_primary_monitors = monitor_factory.make_monitors(
+        object_names=xfmr_sub_object_names, mode=0, terminal=1
+    )
+
+    xfmr_sub_secondary_monitors = monitor_factory.make_monitors(
+        object_names=xfmr_sub_object_names, mode=0, terminal=2
+    )
+
+    # Add the distribution xfmr monitors to the circuit.
+    xfmr_dist_monitors = zip(xfmr_dist_primary_monitors, xfmr_dist_secondary_monitors)
+    for (primary_monitor, secondary_monitor) in track(
+        xfmr_dist_monitors, "Assigning monitors to the distribution xfmrs..."
+    ):
+        dss.Text.Command = primary_monitor.dss_command
+        dss.Text.Command = secondary_monitor.dss_command
+
+    # Add the substation xfmr monitors to the circuit.
+    xfmr_sub_monitors = zip(xfmr_sub_primary_monitors, xfmr_sub_secondary_monitors)
+    for (primary_monitor, secondary_monitor) in track(
+        xfmr_sub_monitors, "Assigning monitors to the substation xfmrs..."
+    ):
+        dss.Text.Command = primary_monitor.dss_command
+        dss.Text.Command = secondary_monitor.dss_command
 
     #***********************************************************************************************
     # Make synthetic load profiles.
@@ -116,19 +159,150 @@ def main(): # pylint: disable=too-many-locals
     dss.Text.Command = "solve"
 
     #***********************************************************************************************
-    # Make the data.
+    # Make the data for the load and distribution transformers.
     #***********************************************************************************************
-    print("Making load monitor data...")
+    print("Making monitor data...")
 
-    load_voltage_df = data_factory.make_load_voltage_data(dss=dss, monitors=load_monitors)
+    monitors = [load_monitors, xfmr_dist_primary_monitors, xfmr_dist_secondary_monitors]
+
+    key_map = {
+        "voltage-magnitude": [
+            "load-voltage-magnitude",
+            "xfmr-distribution-primary-voltage-magnitude",
+            "xfmr-distribution-secondary-voltage-magnitude"
+        ],
+        "voltage-angle": [
+            "load-voltage-angle",
+            "xfmr-distribution-primary-voltage-angle",
+            "xfmr-distribution-secondary-voltage-angle"
+        ],
+        "current-magnitude": [
+            "load-current-magnitude",
+            "xfmr-distribution-primary-current-magnitude",
+            "xfmr-distribution-secondary-current-magnitude"
+        ],
+        "current-angle": [
+            "load-current-angle",
+            "xfmr-distribution-primary-current-angle",
+            "xfmr-distribution-secondary-current-angle"
+        ]
+    }
+
+    voltage_magnitude_dfs = {
+        key: monitor_factory.make_monitor_data(
+            channel=monitor_channel.OnePhase.Mode0.V1.value, dss=dss, monitors=monitors
+        )
+    for (key, monitors) in zip(key_map["voltage-magnitude"], monitors)}
+
+    voltage_angle_dfs = {
+        key: monitor_factory.make_monitor_data(
+            channel=monitor_channel.OnePhase.Mode0.VAngle1.value, dss=dss, monitors=monitors
+        )
+    for (key, monitors) in zip(key_map["voltage-angle"], monitors)}
+
+    current_magnitude_dfs = {
+        key: monitor_factory.make_monitor_data(
+            channel=monitor_channel.OnePhase.Mode0.I1.value, dss=dss, monitors=monitors
+        )
+    for (key, monitors) in zip(key_map["current-magnitude"], monitors)}
+
+    current_angle_dfs = {
+        key: monitor_factory.make_monitor_data(
+            channel=monitor_channel.OnePhase.Mode0.IAngle1.value, dss=dss, monitors=monitors
+        )
+    for (key, monitors) in zip(key_map["current-angle"], monitors)}
+
+    #***********************************************************************************************
+    # Make the data for the substation transformer.
+    #***********************************************************************************************
+    xfmr_channel_map = {
+        "voltage-magnitude": [
+            monitor_channel.ThreePhase.Mode0.V1.value,
+            monitor_channel.ThreePhase.Mode0.V2.value,
+            monitor_channel.ThreePhase.Mode0.V3.value
+        ],
+        "voltage-angle": [
+            monitor_channel.ThreePhase.Mode0.VAngle1.value,
+            monitor_channel.ThreePhase.Mode0.VAngle2.value,
+            monitor_channel.ThreePhase.Mode0.VAngle3.value
+        ],
+        "current-magnitude": [
+            monitor_channel.ThreePhase.Mode0.I1.value,
+            monitor_channel.ThreePhase.Mode0.I2.value,
+            monitor_channel.ThreePhase.Mode0.I3.value
+        ],
+        "current-angle": [
+            monitor_channel.ThreePhase.Mode0.IAngle1.value,
+            monitor_channel.ThreePhase.Mode0.IAngle2.value,
+            monitor_channel.ThreePhase.Mode0.IAngle3.value
+        ]
+    }
+
+    # Make a numpy array for each individual substation channel.
+    temp_xfmr_primary_map = {
+        key: [
+            monitor_factory.make_monitor_data(
+                channel=channel, dss=dss, monitors=xfmr_sub_primary_monitors
+            ).to_numpy(dtype=float).reshape(-1,)
+        for channel in channels]
+    for (key, channels) in xfmr_channel_map.items()}
+
+    temp_xfmr_secondary_map = {
+        key: [
+            monitor_factory.make_monitor_data(
+                channel=channel, dss=dss, monitors=xfmr_sub_secondary_monitors
+            ).to_numpy(dtype=float).reshape(-1,)
+        for channel in channels]
+    for (key, channels) in xfmr_channel_map.items()}
+
+    # Column stack the arrays so they form an N x 3 matrix of measurements for each phase.
+    xfmr_primary_data = {
+        key: np.column_stack(channel_data_list)
+    for (key, channel_data_list) in temp_xfmr_primary_map.items()}
+
+    xfmr_secondary_data = {
+        key: np.column_stack(channel_data_list)
+    for (key, channel_data_list) in temp_xfmr_secondary_map.items()}
+
+    # Make the final dataframes.
+    column_names = [f"{xfmr_sub_name};{phase}" for phase in ["a", "b", "c"]]
+    xfmr_sub_primary_dfs = {
+        key: pd.DataFrame(data=data, columns=column_names)
+    for (key, data) in xfmr_primary_data.items()}
+
+    xfmr_sub_secondary_dfs = {
+        key: pd.DataFrame(data=data, columns=column_names)
+    for (key, data) in xfmr_secondary_data.items()}
 
     #***********************************************************************************************
     # Save data.
     #***********************************************************************************************
     print("Saving data...")
 
-    pyarrow.feather.write_feather(df=load_voltage_df, dest=f"{basepath}/data/load_voltage.feather")
-    pyarrow.feather.write_feather(df=metadata_df, dest=f"{basepath}/data/metadata.feather")
+    data_dfs_list = [
+        voltage_magnitude_dfs,
+        voltage_angle_dfs,
+        current_magnitude_dfs,
+        current_angle_dfs
+    ]
+
+    _ = [
+        [
+            pyarrow.feather.write_feather(df=data_df, dest=f"{basepath}/data/{key}.feather")
+        for (key, data_df) in data_dfs.items()]
+    for data_dfs in data_dfs_list]
+
+    _ = {
+        pyarrow.feather.write_feather(
+            df=data_df, dest=f"{basepath}/data/xfmr-substation-primary-{key}.feather")
+    for (key, data_df) in xfmr_sub_primary_dfs.items()}
+
+    _ = {
+        pyarrow.feather.write_feather(
+            df=data_df, dest=f"{basepath}/data/xfmr-substation-secondary-{key}.feather")
+    for (key, data_df) in xfmr_sub_secondary_dfs.items()}
+
+    pyarrow.feather.write_feather(df=labels_df, dest=f"{basepath}/data/labels.feather")
 
     print("...Done!")
 
