@@ -5,7 +5,7 @@ The module contains functions for making load profiles.
 """
 
 from typing import Any, List, NamedTuple, Sequence
-from nptyping import NDArray
+from nptyping import Float, NDArray, Shape
 
 import win32com.client
 
@@ -32,7 +32,7 @@ class Profile(NamedTuple):
     """
     dss_commands: Sequence[str]
     element_name: str
-    values: NDArray[(Any,), float]
+    values: NDArray[Shape["*"], Float]
 
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
@@ -138,8 +138,8 @@ def make_default_gaussian_profiles(
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
 def _profile_generator(
-    base_profile_name: str, dss: win32com.client.CDispatch, rng: np.random.Generator)\
-    -> NDArray[(Any,), float]:
+    base_profile_name: str, dss: win32com.client.CDispatch, rng: np.random.Generator
+) -> NDArray[Shape["*"], Float]:
     """
     Generates a sythetic load profile by adding gaussian white noise to some base profile.
 
