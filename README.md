@@ -18,6 +18,12 @@ The labels will also be generated for each load containing the following:
 - Name of the ckt5 loadshape used to synthesize the load profile for the load.
 - Name of the secondary distribution transformer that the load is connected to.
 
+These are the labels associated with each single-phase secondary distribution transformer in the circuit. They are as follows:
+- The names of the loads connected to the transformer as a string separated by ";".
+- The indices of the loads connected to the transformer as a string separated by ";".
+- Phase that the secondary distribution transformer is connected to (A = 0, B = 1, C = 2).
+- Name of the secondary distribution transformer in the ckt5 circuit.
+
 The generated dataset will be in the [Apache Arrow Feather](https://arrow.apache.org/docs/python/feather.html) format.
 
 ## Requirements
