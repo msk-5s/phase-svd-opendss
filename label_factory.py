@@ -8,6 +8,7 @@ import win32com.client
 
 from typing import List, Sequence, Tuple
 
+import numpy as np
 import pandas as pd
 
 #---------------------------------------------------------------------------------------------------
@@ -181,7 +182,7 @@ def _make_transformer_values( # pylint: disable=too-many-locals
 
 #---------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------
-def make_labels(dss: win32com.client.CDispatch):
+def make_load_labels(dss: win32com.client.CDispatch) -> pd.DataFrame:
     """
     Make the labels for the loads.
 
@@ -232,3 +233,62 @@ def make_labels(dss: win32com.client.CDispatch):
     )
 
     return label_df
+
+#---------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
+def make_xfmr_labels(dss: win32com.client.CDispatch, labels_load_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Make the labels for the xfmrs.
+
+    Parameters
+    ----------
+    dss : win32com.client.CDispatch
+        The OpenDSSEngine object.
+
+    Returns
+    -------
+    pandas.DataFrame, (n_xfmr, n_fields)
+        The labels.
+    """
+    #***********************************************************************************************
+    # Get the phase of the 591 secondary distribution transformers.
+    #***********************************************************************************************
+    # There are only 591 distribution transformers, but each transformer can have multiple loads.
+    unique_xfmr_names = np.unique(labels_load_df["transformer_name"].to_numpy(dtype=str))
+    load_xfmr_names = labels_load_df["transformer_name"].to_numpy(dtype=str)
+
+    # Get the indices for the loads connected to each transformer.
+    xfmr_load_indices_list = [
+        np.where(load_xfmr_names == xfmr_name)[0] for xfmr_name in unique_xfmr_names
+    ]
+
+    # Since the transformers are single phase, we only need to get the phase of the first load to
+    # get the phase of the transformer.
+    phases = [
+        labels_load_df.at[xfmr_load_indices[0], "phase"]
+    for xfmr_load_indices in xfmr_load_indices_list]
+
+    #***********************************************************************************************
+    # Get the names and indices of the loads connected to each secondary distribution transformer.
+    #***********************************************************************************************
+    load_names = [
+        ";".join(labels_load_df.loc[xfmr_load_indices, "load_name"].to_list())
+    for xfmr_load_indices in xfmr_load_indices_list]
+
+    load_indices = [
+        ";".join([str(i) for i in xfmr_load_indices])
+    for xfmr_load_indices in xfmr_load_indices_list]
+
+    #***********************************************************************************************
+    # Make the label data frame.
+    #***********************************************************************************************
+    labels_df = pd.DataFrame(
+        data={
+            "load_indices": load_indices,
+            "load_names": load_names,
+            "phase": phases,
+            "transformer_name": unique_xfmr_names
+        }
+    )
+
+    return labels_df

@@ -47,7 +47,8 @@ def main(): # pylint: disable=too-many-locals
     # Commercial_MD).
     print("Making labels...")
 
-    labels_df = label_factory.make_labels(dss=dss)
+    labels_load_df = label_factory.make_load_labels(dss=dss)
+    labels_xfmr_df = label_factory.make_xfmr_labels(dss=dss, labels_load_df=labels_load_df)
 
     #***********************************************************************************************
     # Make monitors for the loads.
@@ -302,7 +303,8 @@ def main(): # pylint: disable=too-many-locals
             df=data_df, dest=f"{basepath}/data/xfmr-substation-secondary-{key}.feather")
     for (key, data_df) in xfmr_sub_secondary_dfs.items()}
 
-    pyarrow.feather.write_feather(df=labels_df, dest=f"{basepath}/data/labels.feather")
+    pyarrow.feather.write_feather(df=labels_load_df, dest=f"{basepath}/data/load-labels.feather")
+    pyarrow.feather.write_feather(df=labels_xfmr_df, dest=f"{basepath}/data/xfmr-labels.feather")
 
     print("...Done!")
 
